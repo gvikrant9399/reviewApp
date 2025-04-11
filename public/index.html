@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HealthRate – Doctor Registry & Feedback</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+  <style>
+    body {
+      background-color: rgb(230, 240, 250);
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      font-size: 16px;
+      margin: 8px 0;
+      padding: 8px;
+      width: 300px;
+    }
+    button:hover {
+      background-color: #b9e6f2;
+    }
+  </style>
+</head>
+<body>
+  <h2>🩺 HealthRate dApp – Patient Feedback & Doctor Registry</h2>
+
+  <button onclick="connectMetamask()">Connect MetaMask</button>
+  <p id="account">Not connected</p>
+
+  <hr>
+
+  <h3>📋 Register Doctor</h3>
+  <input id="doctorName" placeholder="Enter doctor's name" />
+  <button onclick="registerDoctor()">Register Doctor</button>
+
+  <h3>📚 View Registered Doctors</h3>
+  <button onclick="getDoctors()">Show Doctors</button>
+  <ul id="doctorList"></ul>
+
+  <hr>
+
+  <h3>💬 Add Feedback</h3>
+  <input id="feedbackDoctor" placeholder="Doctor's name" />
+  <input id="feedbackText" placeholder="Your feedback" />
+  <button onclick="addFeedback()">Submit Feedback</button>
+
+  <h3>📖 View Feedback</h3>
+  <input id="viewFeedbackDoctor" placeholder="Doctor's name" />
+  <button onclick="viewFeedback()">View Feedback</button>
+  <ul id="feedbackList"></ul>
+
+  <hr>
+
+  <h3>📡 View Wallet Transactions</h3>
+  <button onclick="getWalletTransactions()">Get Wallet Transactions</button>
+  <ul id="txList"></ul>
+
+  <script>
+    let account;
+    let web3;
+
+    // Replace these with your actual deployed contract addresses
+    const doctorAddress = "0x995A029A1fDd184c53B257899cc9D42839883C20";
+    const feedbackAddress = "0xde96f5268424953395670591Dd898334FF19c019";
+
+    const doctorABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "doctorName",
+				"type": "string"
+			}
+		],
+		"name": "registerDoctor",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "doctorList",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getDoctors",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+    const feedbackABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "doctor",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "review",
+				"type": "string"
+			}
+		],
+		"name": "addFeedback",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "feedbacks",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "patient",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "review",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "doctor",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "getFeedback",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "doctor",
+				"type": "string"
+			}
+		],
+		"name": "getFeedbackCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+    const connectMetamask = async () => {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        account = accounts[0];
+        document.getElementById("account").innerText = "Connected: " + account;
+      }
+    };
+
+    const registerDoctor = async () => {
+      const name = document.getElementById("doctorName").value;
+      const contract = new web3.eth.Contract(doctorABI, doctorAddress);
+      await contract.methods.registerDoctor(name).send({ from: account });
+      alert("Doctor Registered!");
+    };
+
+    const getDoctors = async () => {
+      const contract = new web3.eth.Contract(doctorABI, doctorAddress);
+      const doctors = await contract.methods.getDoctors().call();
+      const list = document.getElementById("doctorList");
+      list.innerHTML = "";
+      doctors.forEach(d => {
+        const item = document.createElement("li");
+        item.innerText = d;
+        list.appendChild(item);
+      });
+    };
+
+    const addFeedback = async () => {
+      const doctor = document.getElementById("feedbackDoctor").value;
+      const review = document.getElementById("feedbackText").value;
+      const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
+      await contract.methods.addFeedback(doctor, review).send({ from: account });
+      alert("Feedback submitted!");
+    };
+
+    const viewFeedback = async () => {
+  const doctor = document.getElementById("viewFeedbackDoctor").value.trim();
+  const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
+  const list = document.getElementById("feedbackList");
+  list.innerHTML = "";
+
+  if (!doctor) {
+    list.innerHTML = "<li>Please enter a doctor name</li>";
+    return;
+  }
+
+  try {
+    const count = await contract.methods.getFeedbackCount(doctor).call();
+    console.log(`Feedback count for "${doctor}":`, count);
+
+    if (count === "0" || count === 0) {
+      list.innerHTML = "<li>No feedback found for this doctor</li>";
+      return;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const feedback = await contract.methods.getFeedback(doctor, i).call();
+      console.log(`Feedback[${i}]`, feedback);
+      const item = document.createElement("li");
+      item.innerText = `${feedback[0]} said: "${feedback[1]}"`;
+      list.appendChild(item);
+    }
+  } catch (error) {
+    console.error("Error fetching feedback:", error);
+    list.innerHTML = "<li>Something went wrong while fetching feedback</li>";
+  }
+};
+
+
+    const getWalletTransactions = async () => {
+      try {
+        const response = await fetch('/api/transactions');
+        const data = await response.json();
+
+        const txList = document.getElementById("txList");
+        txList.innerHTML = "";
+
+        if (data.result && data.result.length > 0) {
+          data.result.slice(0, 5).forEach(tx => {
+            const item = document.createElement("li");
+            item.innerText = `To: ${tx.to}, TxHash: ${tx.hash.substring(0, 12)}..., Value: ${web3.utils.fromWei(tx.value, 'ether')} ETH`;
+            txList.appendChild(item);
+          });
+        } else {
+          txList.innerHTML = "<li>No transactions found</li>";
+        }
+      } catch (err) {
+        console.error("Failed to fetch transactions", err);
+        document.getElementById("txList").innerHTML = "<li>Error fetching transactions</li>";
+      }
+    };
+  </script>
+</body>
+</html>
