@@ -1,278 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HealthRate – Doctor Registry & Feedback</title>
+  <title>HealthRate – Doctor Feedback</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
   <style>
     body {
-      background-color: rgb(230, 240, 250);
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      scroll-behavior: smooth;
-    }
-
-    /* ===== Navbar ===== */
-    nav {
-      background-color: #2b5ca0;
-      color: white;
-      padding: 10px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .nav-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1000px;
-      margin: auto;
-    }
-
-    .logo {
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .nav-links {
-      list-style: none;
-      display: flex;
-      gap: 20px;
-      margin: 0;
-      padding: 0;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-    }
-
-    .nav-links a:hover {
-      text-decoration: underline;
-    }
-
-    /* ===== Page Sections ===== */
-    section, h2, h3, p {
-      max-width: 800px;
-      margin: auto;
+      font-family: sans-serif;
+      background-color: #f4f6f8;
       padding: 20px;
     }
-
+    h2, h3 {
+      color: #2b5ca0;
+    }
     input, button {
-      font-size: 16px;
-      margin: 8px 0;
       padding: 8px;
+      margin: 5px 0;
       width: 300px;
     }
-
-    button:hover {
-      background-color: #b9e6f2;
-    }
-
     ul {
-      max-width: 800px;
-      margin: auto;
-    }
-
-    hr {
-      margin: 40px auto;
-      max-width: 800px;
+      padding-left: 20px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== Navigation Bar ===== -->
-  <nav>
-    <div class="nav-container">
-      <div class="logo">🩺 HealthRate</div>
-      <ul class="nav-links">
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#feedback">Give Feedback</a></li>
-      </ul>
-    </div>
-  </nav>
+  <h2>HealthRate - Doctor Registry and Feedback</h2>
 
-  <!-- ===== Home Section ===== -->
-  <div id="home">
-    <section>
-      <h2>Welcome to HealthRate dApp</h2>
-      <p>HealthRate is a decentralized doctor registry and feedback platform built on Ethereum. Patients can register doctors, submit reviews, and view experiences shared by others.</p>
-    </section>
-  </div>
-
-  <!-- ===== About Us Section ===== -->
-  <section id="about">
-    <h3>About HealthRate</h3>
-    <p>We aim to bring transparency and accountability to the healthcare experience through blockchain technology. Every interaction is securely logged and visible on-chain via the Ethereum Sepolia network.</p>
-  </section>
+  <button onclick="connect()">Connect MetaMask</button>
+  <p id="account">Not connected</p>
 
   <hr>
 
-  <!-- ===== dApp Interaction Section ===== -->
-  <section id="feedback">
-    <button onclick="connectMetamask()">Connect MetaMask</button>
-    <p id="account">Not connected</p>
+  <h3>Register Doctor</h3>
+  <input id="doctorName" placeholder="Doctor's name">
+  <button onclick="register()">Register</button>
 
-    <h3>📋 Register Doctor</h3>
-    <input id="doctorName" placeholder="Enter doctor's name" />
-    <button onclick="registerDoctor()">Register Doctor</button>
+  <h3>View Doctors</h3>
+  <button onclick="listDoctors()">Get Doctors</button>
+  <ul id="doctorList"></ul>
 
-    <h3>📚 View Registered Doctors</h3>
-    <button onclick="getDoctors()">Show Doctors</button>
-    <ul id="doctorList"></ul>
+  <h3>Give Feedback</h3>
+  <input id="feedbackDoctor" placeholder="Doctor's name">
+  <input id="feedbackText" placeholder="Your feedback">
+  <button onclick="giveFeedback()">Submit</button>
 
-    <h3>💬 Add Feedback</h3>
-    <input id="feedbackDoctor" placeholder="Doctor's name" />
-    <input id="feedbackText" placeholder="Your feedback" />
-    <button onclick="addFeedback()">Submit Feedback</button>
+  <h3>View Feedback</h3>
+  <input id="viewDoctor" placeholder="Doctor's name">
+  <button onclick="showFeedback()">View</button>
+  <ul id="feedbackList"></ul>
 
-    <h3>📖 View Feedback</h3>
-    <input id="viewFeedbackDoctor" placeholder="Doctor's name" />
-    <button onclick="viewFeedback()">View Feedback</button>
-    <ul id="feedbackList"></ul>
+  <h3>Wallet Transactions</h3>
+  <button onclick="loadTransactions()">Get Transactions</button>
+  <ul id="txList"></ul>
 
-    <h3>📡 View Wallet Transactions</h3>
-    <button onclick="getWalletTransactions()">Get Wallet Transactions</button>
-    <ul id="txList"></ul>
-  </section>
-
-  <!-- ===== Scripts ===== -->
   <script>
     let account;
     let web3;
 
-    // ✅ Replace with your deployed contract addresses
-    const doctorAddress = "0xYourDoctorRegistryContractAddress";
-    const feedbackAddress = "0xYourFeedbackStorageContractAddress";
+    const doctorAddress = "0x995A029A1fDd184c53B257899cc9D42839883C20";
+    const feedbackAddress = "0xde96f5268424953395670591Dd898334FF19c019";
 
-    const doctorABI = [
-      {
-        "inputs": [{"internalType": "string","name": "doctorName","type": "string"}],
-        "name": "registerDoctor",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "getDoctors",
-        "outputs": [{"internalType": "string[]","name": "","type": "string[]"}],
-        "stateMutability": "view",
-        "type": "function"
-      }
+    const doctorABI = [ /* shortened for readability */ 
+      { "inputs": [{ "internalType": "string", "name": "doctorName", "type": "string" }],
+        "name": "registerDoctor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "getDoctors", "outputs": [{ "internalType": "string[]", "name": "", "type": "string[]" }],
+        "stateMutability": "view", "type": "function" }
     ];
 
     const feedbackABI = [
-      {
-        "inputs": [{"internalType": "string","name": "doctor","type": "string"},{"internalType": "string","name": "review","type": "string"}],
-        "name": "addFeedback",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [{"internalType": "string","name": "doctor","type": "string"}],
-        "name": "getFeedbackCount",
-        "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [{"internalType": "string","name": "doctor","type": "string"},{"internalType": "uint256","name": "index","type": "uint256"}],
-        "name": "getFeedback",
-        "outputs": [{"internalType": "address","name": "","type": "address"},{"internalType": "string","name": "","type": "string"}],
-        "stateMutability": "view",
-        "type": "function"
-      }
+      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }, { "internalType": "string", "name": "review", "type": "string" }],
+        "name": "addFeedback", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }],
+        "name": "getFeedbackCount", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view", "type": "function" },
+      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }, { "internalType": "uint256", "name": "index", "type": "uint256" }],
+        "name": "getFeedback", "outputs": [{ "internalType": "address", "name": "", "type": "address" }, { "internalType": "string", "name": "", "type": "string" }],
+        "stateMutability": "view", "type": "function" }
     ];
 
-    const connectMetamask = async () => {
+    async function connect() {
       if (window.ethereum) {
         web3 = new Web3(window.ethereum);
         const accounts = await ethereum.request({ method: "eth_requestAccounts" });
         account = accounts[0];
         document.getElementById("account").innerText = "Connected: " + account;
       }
-    };
+    }
 
-    const registerDoctor = async () => {
+    async function register() {
       const name = document.getElementById("doctorName").value;
       const contract = new web3.eth.Contract(doctorABI, doctorAddress);
       await contract.methods.registerDoctor(name).send({ from: account });
-      alert("Doctor Registered!");
-    };
+    }
 
-    const getDoctors = async () => {
+    async function listDoctors() {
       const contract = new web3.eth.Contract(doctorABI, doctorAddress);
       const doctors = await contract.methods.getDoctors().call();
       const list = document.getElementById("doctorList");
       list.innerHTML = "";
-      doctors.forEach(d => {
-        const item = document.createElement("li");
-        item.innerText = d;
-        list.appendChild(item);
+      doctors.forEach(name => {
+        const li = document.createElement("li");
+        li.innerText = name;
+        list.appendChild(li);
       });
-    };
+    }
 
-    const addFeedback = async () => {
+    async function giveFeedback() {
       const doctor = document.getElementById("feedbackDoctor").value;
       const review = document.getElementById("feedbackText").value;
       const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
       await contract.methods.addFeedback(doctor, review).send({ from: account });
-      alert("Feedback submitted!");
-    };
+    }
 
-    const viewFeedback = async () => {
-      const doctor = document.getElementById("viewFeedbackDoctor").value.trim();
-      const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
+    async function showFeedback() {
+      const doctor = document.getElementById("viewDoctor").value;
       const list = document.getElementById("feedbackList");
       list.innerHTML = "";
-
-      try {
-        const count = await contract.methods.getFeedbackCount(doctor).call();
-
-        if (count === "0" || count === 0) {
-          list.innerHTML = "<li>No feedback found for this doctor</li>";
-          return;
-        }
-
-        for (let i = 0; i < count; i++) {
-          const feedback = await contract.methods.getFeedback(doctor, i).call();
-          const item = document.createElement("li");
-          item.innerText = `${feedback[0]} said: "${feedback[1]}"`;
-          list.appendChild(item);
-        }
-      } catch (error) {
-        console.error("Error fetching feedback:", error);
-        list.innerHTML = "<li>Error fetching feedback</li>";
+      const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
+      const count = await contract.methods.getFeedbackCount(doctor).call();
+      for (let i = 0; i < count; i++) {
+        const feedback = await contract.methods.getFeedback(doctor, i).call();
+        const li = document.createElement("li");
+        li.innerText = feedback[0] + " said: " + feedback[1];
+        list.appendChild(li);
       }
-    };
+    }
 
-    const getWalletTransactions = async () => {
+    async function loadTransactions() {
       try {
-        const response = await fetch('/api/transactions');
-        const data = await response.json();
-        const txList = document.getElementById("txList");
-        txList.innerHTML = "";
-
-        if (data.result && data.result.length > 0) {
-          data.result.slice(0, 5).forEach(tx => {
-            const item = document.createElement("li");
-            item.innerText = `To: ${tx.to}, TxHash: ${tx.hash.substring(0, 12)}..., Value: ${web3.utils.fromWei(tx.value, 'ether')} ETH`;
-            txList.appendChild(item);
-          });
-        } else {
-          txList.innerHTML = "<li>No transactions found</li>";
-        }
-      } catch (err) {
-        console.error("Failed to fetch transactions", err);
-        document.getElementById("txList").innerHTML = "<li>Error fetching transactions</li>";
+        const res = await fetch('/api/transactions');
+        const data = await res.json();
+        const list = document.getElementById("txList");
+        list.innerHTML = "";
+        data.result.slice(0, 5).forEach(tx => {
+          const li = document.createElement("li");
+          li.innerText = `To: ${tx.to}, Value: ${web3.utils.fromWei(tx.value)} ETH`;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        console.error(e);
       }
-    };
+    }
   </script>
+
 </body>
 </html>
