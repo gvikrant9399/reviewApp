@@ -1,21 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HealthRate – Doctor Feedback</title>
+  <title>HealthRate – Doctor Registry & Feedback</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f4f6f8;
+      background-color: rgb(112, 140, 216);
+      font-family: Tahoma, sans-serif;
+      font-size: 18px;
+      display: flex;
+      flex-direction: row;
       padding: 20px;
     }
-    h2, h3 {
-      color: #2b5ca0;
+    #readArea, #writeArea {
+      flex: 1;
+      padding: 20px;
+    }
+    h2 {
+      font-size: 28px;
     }
     input, button {
+      width: 80%;
+      font-size: 16px;
+      margin: 10px 0;
       padding: 8px;
-      margin: 5px 0;
-      width: 300px;
+    }
+    button {
+      background-color: rgb(203, 220, 223);
+      font-family: Impact;
+    }
+    button:hover {
+      background-color: rgb(255, 0, 0);
+      color: white;
     }
     ul {
       padding-left: 20px;
@@ -24,109 +40,147 @@
 </head>
 <body>
 
-  <h2>HealthRate - Doctor Registry and Feedback</h2>
+  <!-- LEFT SIDE -->
+  <div id="readArea">
+    <h2>View Info</h2>
+    <button onclick="connect()">Connect MetaMask</button>
+    <p id="account">Not connected</p>
 
-  <button onclick="connect()">Connect MetaMask</button>
-  <p id="account">Not connected</p>
+    <button onclick="getDoctors()">Show Doctors</button>
+    <ul id="doctorList"></ul>
 
-  <hr>
+    <input id="feedbackViewDoctor" placeholder="Doctor's name to view feedback">
+    <button onclick="viewFeedback()">View Feedback</button>
+    <ul id="feedbackList"></ul>
 
-  <h3>Register Doctor</h3>
-  <input id="doctorName" placeholder="Doctor's name">
-  <button onclick="register()">Register</button>
+    <button onclick="getWalletTransactions()">Get Wallet Transactions</button>
+    <ul id="txList"></ul>
+  </div>
 
-  <h3>View Doctors</h3>
-  <button onclick="listDoctors()">Get Doctors</button>
-  <ul id="doctorList"></ul>
+  <!-- RIGHT SIDE -->
+  <div id="writeArea">
+    <h2>Add Data</h2>
+    <button onclick="registerDoctor()">Register Doctor (0.001 ETH)</button>
+    <input id="doctorName" placeholder="Doctor's name">
 
-  <h3>Give Feedback</h3>
-  <input id="feedbackDoctor" placeholder="Doctor's name">
-  <input id="feedbackText" placeholder="Your feedback">
-  <button onclick="giveFeedback()">Submit</button>
-
-  <h3>View Feedback</h3>
-  <input id="viewDoctor" placeholder="Doctor's name">
-  <button onclick="showFeedback()">View</button>
-  <ul id="feedbackList"></ul>
-
-  <h3>Wallet Transactions</h3>
-  <button onclick="loadTransactions()">Get Transactions</button>
-  <ul id="txList"></ul>
+    <button onclick="addFeedback()">Submit Feedback (0.001 ETH)</button>
+    <input id="feedbackDoctor" placeholder="Doctor's name">
+    <input id="feedbackText" placeholder="Your feedback">
+  </div>
 
   <script>
     let account;
     let web3;
-
     const doctorAddress = "0x995A029A1fDd184c53B257899cc9D42839883C20";
     const feedbackAddress = "0xde96f5268424953395670591Dd898334FF19c019";
 
-    const doctorABI = [ /* shortened for readability */ 
-      { "inputs": [{ "internalType": "string", "name": "doctorName", "type": "string" }],
-        "name": "registerDoctor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-      { "inputs": [], "name": "getDoctors", "outputs": [{ "internalType": "string[]", "name": "", "type": "string[]" }],
-        "stateMutability": "view", "type": "function" }
+    const doctorABI = [
+      {
+        "inputs": [{"internalType": "string", "name": "doctorName", "type": "string"}],
+        "name": "registerDoctor",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getDoctors",
+        "outputs": [{"internalType": "string[]", "name": "", "type": "string[]"}],
+        "stateMutability": "view",
+        "type": "function"
+      }
     ];
 
     const feedbackABI = [
-      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }, { "internalType": "string", "name": "review", "type": "string" }],
-        "name": "addFeedback", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }],
-        "name": "getFeedbackCount", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-        "stateMutability": "view", "type": "function" },
-      { "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }, { "internalType": "uint256", "name": "index", "type": "uint256" }],
-        "name": "getFeedback", "outputs": [{ "internalType": "address", "name": "", "type": "address" }, { "internalType": "string", "name": "", "type": "string" }],
-        "stateMutability": "view", "type": "function" }
+      {
+        "inputs": [
+          { "internalType": "string", "name": "doctor", "type": "string" },
+          { "internalType": "string", "name": "review", "type": "string" }
+        ],
+        "name": "addFeedback",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "string", "name": "doctor", "type": "string" }],
+        "name": "getFeedbackCount",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "doctor", "type": "string" },
+          { "internalType": "uint256", "name": "index", "type": "uint256" }
+        ],
+        "name": "getFeedback",
+        "outputs": [
+          { "internalType": "address", "name": "", "type": "address" },
+          { "internalType": "string", "name": "", "type": "string" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
     ];
 
     async function connect() {
       if (window.ethereum) {
         web3 = new Web3(window.ethereum);
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
         account = accounts[0];
         document.getElementById("account").innerText = "Connected: " + account;
       }
     }
 
-    async function register() {
+    async function registerDoctor() {
       const name = document.getElementById("doctorName").value;
       const contract = new web3.eth.Contract(doctorABI, doctorAddress);
-      await contract.methods.registerDoctor(name).send({ from: account });
+      await contract.methods.registerDoctor(name).send({
+        from: account,
+        value: web3.utils.toWei("0.001", "ether")
+      });
+      alert("Doctor registered!");
     }
 
-    async function listDoctors() {
+    async function getDoctors() {
       const contract = new web3.eth.Contract(doctorABI, doctorAddress);
       const doctors = await contract.methods.getDoctors().call();
       const list = document.getElementById("doctorList");
       list.innerHTML = "";
-      doctors.forEach(name => {
-        const li = document.createElement("li");
-        li.innerText = name;
-        list.appendChild(li);
+      doctors.forEach(d => {
+        const item = document.createElement("li");
+        item.innerText = d;
+        list.appendChild(item);
       });
     }
 
-    async function giveFeedback() {
+    async function addFeedback() {
       const doctor = document.getElementById("feedbackDoctor").value;
       const review = document.getElementById("feedbackText").value;
       const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
-      await contract.methods.addFeedback(doctor, review).send({ from: account });
+      await contract.methods.addFeedback(doctor, review).send({
+        from: account,
+        value: web3.utils.toWei("0.001", "ether")
+      });
+      alert("Feedback submitted!");
     }
 
-    async function showFeedback() {
-      const doctor = document.getElementById("viewDoctor").value;
+    async function viewFeedback() {
+      const doctor = document.getElementById("feedbackViewDoctor").value;
+      const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
       const list = document.getElementById("feedbackList");
       list.innerHTML = "";
-      const contract = new web3.eth.Contract(feedbackABI, feedbackAddress);
       const count = await contract.methods.getFeedbackCount(doctor).call();
       for (let i = 0; i < count; i++) {
-        const feedback = await contract.methods.getFeedback(doctor, i).call();
+        const f = await contract.methods.getFeedback(doctor, i).call();
         const li = document.createElement("li");
-        li.innerText = feedback[0] + " said: " + feedback[1];
+        li.innerText = `${f[0]} said: "${f[1]}"`;
         list.appendChild(li);
       }
     }
 
-    async function loadTransactions() {
+    async function getWalletTransactions() {
       try {
         const res = await fetch('/api/transactions');
         const data = await res.json();
