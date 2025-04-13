@@ -15,4 +15,36 @@ router.get('/api/transactions', async (req, res) => {
   }
 });
 
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+  res.render('index', { title: '', name:null });
+});
+
+router.post('/', function(req, res, next) {
+
+  res.render('index', { title: '', name:req.body.name });
+});
+
+router.get('/page1', function(req, res, next) {
+  res.render('page1', { title: '', name:null });
+});
+
+router.get('/page2', function(req, res, next) {
+  res.render('page2', { title: '', name:null });
+});
+
+router.get('/page3', function(req, res, next) {
+  res.render('page3', { title: '', name:null });
+});
+
+router.get('/page4', function(req, res, next) {
+  res.render('page4', { title: '', name:null });
+});
+
+router.get('/page5', function(req, res, next) {
+  res.render('page5', { title: '', name:null });
+});
+
+
 module.exports = router;

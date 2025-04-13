@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+<head>
+  <title>HealthRate</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+</head>
+<body class="container mt-4">
+  <!-- Navbar -->
+  <%- include('partials/navbar') %>
+
+  <h2>🩺 Welcome to HealthRate dApp</h2>
+  <button onclick="connectMetamask()">Connect MetaMask</button>
+  <p id="account">Not connected</p>
+
+  <script>
+    let account;
+    let web3;
+    const connectMetamask = async () => {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        account = accounts[0];
+        document.getElementById("account").innerText = "Connected: " + account;
+      }
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
