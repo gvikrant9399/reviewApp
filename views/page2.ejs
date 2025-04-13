@@ -19,8 +19,9 @@
   <ul id="feedbackList"></ul>
 
   <script>
-    const feedbackAddress = "0xde96f5268424953395670591Dd898334FF19c019";
-    const feedbackABI = [{
+    const feedbackAddress = "0xbaF53F641A94AC850468b03282Aa971B651Adf0f";
+    const feedbackABI = [
+	{
 		"inputs": [
 			{
 				"internalType": "string",
@@ -35,7 +36,7 @@
 		],
 		"name": "addFeedback",
 		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -115,7 +116,7 @@
 		"stateMutability": "view",
 		"type": "function"
 	}
-    ]; 
+]; 
     
     let account;
     let web3 = new Web3(window.ethereum);

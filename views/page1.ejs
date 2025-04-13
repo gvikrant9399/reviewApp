@@ -17,52 +17,53 @@
   <ul id="doctorList"></ul>
 
   <script>
-    const doctorAddress = "0x995A029A1fDd184c53B257899cc9D42839883C20";
-    const doctorABI = [{
-    "inputs": [
-        {
-            "internalType": "string",
-            "name": "doctorName",
-            "type": "string"
-        }
-    ],
-    "name": "registerDoctor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-},
-{
-    "inputs": [
-        {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-        }
-    ],
-    "name": "doctorList",
-    "outputs": [
-        {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-        }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-},
-{
-    "inputs": [],
-    "name": "getDoctors",
-    "outputs": [
-        {
-            "internalType": "string[]",
-            "name": "",
-            "type": "string[]"
-        }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-}
+    const doctorAddress = "0xd13757798F7cE6Daa7FeF88f11F1E0aCD3eD7075";
+    const doctorABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "doctorName",
+				"type": "string"
+			}
+		],
+		"name": "registerDoctor",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "doctorList",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getDoctors",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
 ];
 
     let web3 = new Web3(window.ethereum);
